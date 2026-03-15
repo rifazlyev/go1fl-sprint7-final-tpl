@@ -60,21 +60,22 @@ func TestCafeCount(t *testing.T) {
 		{0, 0},
 		{1, 1},
 		{2, 2},
-		{100, len(cafeList["moscow"])},
+		{100, min(100, len(cafeList["moscow"]))},
 	}
 
 	for _, v := range requests {
 		response := httptest.NewRecorder()
 		targetURL := fmt.Sprintf("/cafe?city=moscow&count=%d", v.count)
 		req := httptest.NewRequest(http.MethodGet, targetURL, nil)
+
 		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
 
 		var resultCafeList []string
 		if responseBody := response.Body.String(); responseBody != "" {
 			resultCafeList = strings.Split(responseBody, ",")
 		}
-		require.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, v.wantCount, len(resultCafeList))
+		assert.Len(t, resultCafeList, v.wantCount)
 	}
 }
 
@@ -94,13 +95,22 @@ func TestCafeSearch(t *testing.T) {
 		response := httptest.NewRecorder()
 		targetURL := fmt.Sprintf("/cafe?city=moscow&search=%s", v.search)
 		req := httptest.NewRequest(http.MethodGet, targetURL, nil)
+
 		handler.ServeHTTP(response, req)
+		require.Equal(t, http.StatusOK, response.Code)
 
 		var resultCafeList []string
 		if responseBody := response.Body.String(); responseBody != "" {
 			resultCafeList = strings.Split(responseBody, ",")
 		}
-		require.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, v.wantCount, len(resultCafeList))
+		if v.search != "" {
+			searchLower := strings.ToLower(v.search)
+			for _, cafe := range resultCafeList {
+				cafeLower := strings.ToLower(cafe)
+				assert.True(t, strings.Contains(cafeLower, searchLower),
+					"cafe %q should contain %q", cafe, v.search)
+			}
+		}
+		assert.Len(t, resultCafeList, v.wantCount)
 	}
 }

@@ -107,8 +107,7 @@ func TestCafeSearch(t *testing.T) {
 			searchLower := strings.ToLower(v.search)
 			for _, cafe := range resultCafeList {
 				cafeLower := strings.ToLower(cafe)
-				assert.True(t, strings.Contains(cafeLower, searchLower),
-					"cafe %q should contain %q", cafe, v.search)
+				assert.Contains(t, cafeLower, searchLower)
 			}
 		}
 		assert.Len(t, resultCafeList, v.wantCount)
